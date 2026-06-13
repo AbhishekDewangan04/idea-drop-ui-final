@@ -42,12 +42,32 @@ const server = http.createServer(async (req,res)=>{
   const { method } = req;
   let url = req.url;
   // normalize /api prefix used by frontend
-  if (url.startsWith('/api')) url = url.replace(/^\/api/, '');
+  if (url === '/ideas' && method === 'GET') {
+  const db = readDB();
 
-  if(url === '/ideas' && method === 'GET'){
-    const db = readDB();
-    return sendJSON(res, 200, db.ideas || []);
-  }
+  return sendJSON(
+    res,
+    200,
+    Array.isArray(db.ideas)
+      ? db.ideas
+      : []
+  );
+}
+
+  const limit =
+    Number(
+      new URL(
+        req.url,
+        "http://localhost:8000"
+      ).searchParams.get("_limit")
+    ) || db.ideas.length;
+
+  return sendJSON(
+    res,
+    200,
+    db.ideas.slice(0, limit)
+  );
+}
   if(url === '/auth/refresh' && method === 'POST'){
   return sendJSON(res, 200, {
     accessToken: 'fake-access-token',
@@ -82,10 +102,6 @@ const server = http.createServer(async (req,res)=>{
   });
 }
 
-  if(url.startsWith('/ideas') && method === 'GET'){
-  const db = readDB();
-  return sendJSON(res, 200, db.ideas || []);
-}
 
   // fallback
   sendJSON(res, 404, { message: 'Not Found' });
