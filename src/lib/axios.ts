@@ -10,7 +10,7 @@ import {
 
 const api = axios.create({
   baseURL:
-    "http://localhost:8000/api",
+    "https://idea-drop-ui-final-production.up.railway.app",
 
   headers: {
     "Content-Type":
