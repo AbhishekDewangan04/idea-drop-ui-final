@@ -1,4 +1,3 @@
-```tsx
 import { loginUser } from "@/api/auth";
 import { useAuth } from "@/context/AuthContext";
 import { useMutation } from "@tanstack/react-query";
@@ -38,7 +37,7 @@ function LoginPage() {
     mutateAsync,
     isPending,
   } = useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       email,
       password,
     }: {
@@ -50,9 +49,7 @@ function LoginPage() {
         password
       ),
 
-    onSuccess: (
-      data
-    ) => {
+    onSuccess: (data) => {
       setAccessToken(
         data.accessToken
       );
@@ -86,13 +83,7 @@ function LoginPage() {
           email,
           password,
         });
-      } catch (
-        error
-      ) {
-        console.log(
-          error
-        );
-      }
+      } catch {}
     };
 
   return (
@@ -102,7 +93,7 @@ function LoginPage() {
       </h1>
 
       {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
+        <div className="bg-red-100 text-red-700 p-2 rounded">
           {error}
         </div>
       )}
@@ -114,26 +105,25 @@ function LoginPage() {
         className="space-y-2"
       >
         <input
-          type="text"
-          placeholder="Email"
           value={email}
           onChange={(e) =>
             setEmail(
               e.target.value
             )
           }
+          placeholder="Email"
           className="w-full border p-2 rounded"
         />
 
         <input
           type="password"
-          placeholder="Password"
           value={password}
           onChange={(e) =>
             setPassword(
               e.target.value
             )
           }
+          placeholder="Password"
           className="w-full border p-2 rounded"
         />
 
@@ -141,7 +131,6 @@ function LoginPage() {
           disabled={
             isPending
           }
-          type="submit"
           className="bg-blue-600 text-white w-full p-2 rounded"
         >
           {isPending
@@ -161,4 +150,5 @@ function LoginPage() {
     </div>
   );
 }
-```
+
+export default LoginPage;
