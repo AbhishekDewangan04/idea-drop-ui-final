@@ -41,7 +41,7 @@ function RegisterPage() {
     mutateAsync,
     isPending,
   } = useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       name,
       email,
       password,
@@ -100,7 +100,7 @@ function RegisterPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">
+      <h1 className="text-2xl font-bold text-gray-800 mb-4">
         Register
       </h1>
 
@@ -164,9 +164,8 @@ function RegisterPage() {
             : "Register"}
         </button>
 
-        <p>
-          Already have
-          account?{" "}
+        <p className="text-center">
+          Already have an account?{" "}
           <Link
             to="/login"
             className="text-blue-600"
