@@ -10,12 +10,19 @@ const DB_PATH = path.join(
 );
 
 function readDB() {
-  return JSON.parse(
-    fs.readFileSync(
-      DB_PATH,
-      "utf8"
-    )
-  );
+  try {
+    return JSON.parse(
+      fs.readFileSync(
+        DB_PATH,
+        "utf8"
+      )
+    );
+  } catch {
+    return {
+      ideas: [],
+      users: [],
+    };
+  }
 }
 
 function sendJSON(
@@ -28,7 +35,7 @@ function sendJSON(
       "application/json",
 
     "Access-Control-Allow-Origin":
-      "*",
+      "https://idea-drop-ui-final-50f8fd0pps-abhisheks-projects-9a293ac2.vercel.app",
 
     "Access-Control-Allow-Credentials":
       "true",
@@ -37,7 +44,7 @@ function sendJSON(
       "Content-Type, Authorization",
 
     "Access-Control-Allow-Methods":
-      "GET, POST, PUT, DELETE, OPTIONS",
+      "GET, POST, OPTIONS",
   });
 
   res.end(
@@ -52,8 +59,9 @@ function parseBody(req) {
 
       req.on(
         "data",
-        (chunk) =>
-          (body += chunk)
+        (chunk) => {
+          body += chunk;
+        }
       );
 
       req.on(
@@ -91,11 +99,13 @@ const server =
         );
       }
 
-      const {
-        method,
-        url,
-      } = req;
+      const method =
+        req.method;
 
+      const url =
+        req.url;
+
+      // GET IDEAS
       if (
         url.startsWith(
           "/api/ideas"
@@ -114,6 +124,7 @@ const server =
         );
       }
 
+      // LOGIN
       if (
         url ===
           "/api/auth/login" &&
@@ -146,37 +157,88 @@ const server =
           );
 
         if (
-          user
+          !user
         ) {
           return sendJSON(
             res,
-            200,
+            401,
             {
-              accessToken:
-                "fake-token",
-
-              user: {
-                id: user.id,
-                name:
-                  user.name,
-                email:
-                  user.email,
-              },
+              message:
+                "Invalid credentials",
             }
           );
         }
 
         return sendJSON(
           res,
-          401,
+          200,
           {
-            message:
-              "Invalid credentials",
+            accessToken:
+              "fake-token",
+
+            user: {
+              id:
+                user.id,
+              name:
+                user.name,
+              email:
+                user.email,
+            },
           }
         );
       }
 
-      sendJSON(
+      // REGISTER
+      if (
+        url ===
+          "/api/auth/register" &&
+        method ===
+          "POST"
+      ) {
+        const body =
+          await parseBody(
+            req
+          );
+
+        return sendJSON(
+          res,
+          201,
+          {
+            accessToken:
+              "fake-token",
+
+            user: {
+              id:
+                Date.now().toString(),
+
+              name:
+                body.name,
+
+              email:
+                body.email,
+            },
+          }
+        );
+      }
+
+      // REFRESH
+      if (
+        url ===
+          "/api/auth/refresh" &&
+        method ===
+          "POST"
+      ) {
+        return sendJSON(
+          res,
+          200,
+          {
+            accessToken:
+              "fake-token",
+          }
+        );
+      }
+
+      return sendJSON(
         res,
         404,
         {
@@ -193,8 +255,9 @@ const PORT =
 
 server.listen(
   PORT,
-  () =>
+  () => {
     console.log(
       `Running on ${PORT}`
-    )
+    );
+  }
 );

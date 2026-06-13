@@ -1,20 +1,12 @@
 import axios from "axios";
-import {
-  getStoredAccessToken,
-  setStoredAccessToken,
-} from "./authToken";
-
-import {
-  refreshAccessToken,
-} from "@/api/auth";
+import { getStoredAccessToken } from "./authToken";
 
 const api = axios.create({
   baseURL:
-    "https://idea-drop-ui-final-production.up.railway.app",
+    "https://idea-drop-ui-final-production.up.railway.app/api",
 
   headers: {
-    "Content-Type":
-      "application/json",
+    "Content-Type": "application/json",
   },
 
   withCredentials: true,
@@ -31,50 +23,18 @@ api.interceptors.request.use(
     }
 
     return config;
-  }
+  },
+
+  (error) =>
+    Promise.reject(error)
 );
 
 api.interceptors.response.use(
-  (res) => res,
+  (response) =>
+    response,
 
-  async (error) => {
-    const requestConfig =
-      error.config;
-
-    if (
-      error.response?.status ===
-        401 &&
-      !requestConfig.url.includes(
-        "/auth/refresh"
-      )
-    ) {
-      try {
-        const {
-          accessToken,
-        } =
-          await refreshAccessToken();
-
-        setStoredAccessToken(
-          accessToken
-        );
-
-        requestConfig.headers.Authorization =
-          `Bearer ${accessToken}`;
-
-        return api(
-          requestConfig
-        );
-      } catch {
-        return Promise.reject(
-          error
-        );
-      }
-    }
-
-    return Promise.reject(
-      error
-    );
-  }
+  (error) =>
+    Promise.reject(error)
 );
 
 export default api;
