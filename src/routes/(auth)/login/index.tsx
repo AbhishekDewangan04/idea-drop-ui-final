@@ -1,4 +1,4 @@
-import { registerUser } from "@/api/auth";
+import { loginUser } from "@/api/auth";
 import { useAuth } from "@/context/AuthContext";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -7,14 +7,19 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 export const Route =
-  createFileRoute("/(auth)/register/")({
-    component: RegisterPage,
+  createFileRoute("/(auth)/login/")({
+    component: LoginPage,
   });
 
-function RegisterPage() {
+type LoginInput = {
+  email: string;
+  password: string;
+};
+
+function LoginPage() {
   const {
     setAccessToken,
     setUser,
@@ -23,16 +28,11 @@ function RegisterPage() {
   const navigate =
     useNavigate();
 
-  const [name, setName] =
-    useState("");
-
   const [email, setEmail] =
     useState("");
 
-  const [
-    password,
-    setPassword,
-  ] = useState("");
+  const [password, setPassword] =
+    useState("");
 
   const [error, setError] =
     useState("");
@@ -41,22 +41,18 @@ function RegisterPage() {
     mutateAsync,
     isPending,
   } = useMutation({
-    mutationFn: ({
-      name,
-      email,
-      password,
-    }: {
-      name: string;
-      email: string;
-      password: string;
-    }) =>
-      registerUser(
-        name,
-        email,
-        password
-      ),
+    mutationFn: (
+      data: LoginInput
+    ) => {
+      return loginUser(
+        data.email,
+        data.password
+      );
+    },
 
-    onSuccess: (data) => {
+    onSuccess: (
+      data
+    ) => {
       setAccessToken(
         data.accessToken
       );
@@ -70,7 +66,9 @@ function RegisterPage() {
       });
     },
 
-    onError: (error) => {
+    onError: (
+      error: Error
+    ) => {
       setError(
         error.message
       );
@@ -83,51 +81,28 @@ function RegisterPage() {
     ) => {
       e.preventDefault();
 
-      try {
-        await mutateAsync({
-          name,
-          email,
-          password,
-        });
-      } catch (
-        error
-      ) {
-        console.log(
-          error
-        );
-      }
+      await mutateAsync({
+        email,
+        password,
+      });
     };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-4">
-        Register
+      <h1 className="text-2xl font-bold mb-4">
+        Login
       </h1>
 
       {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
+        <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
           {error}
         </div>
       )}
 
       <form
-        onSubmit={
-          handleSubmit
-        }
+        onSubmit={handleSubmit}
         className="space-y-2"
       >
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) =>
-            setName(
-              e.target.value
-            )
-          }
-          className="w-full border p-2 rounded"
-        />
-
         <input
           type="email"
           placeholder="Email"
@@ -153,24 +128,21 @@ function RegisterPage() {
         />
 
         <button
-          type="submit"
-          disabled={
-            isPending
-          }
-          className="bg-blue-600 text-white w-full p-2 rounded"
+          disabled={isPending}
+          className="bg-blue-600 text-white p-2 rounded w-full"
         >
           {isPending
-            ? "Registering..."
-            : "Register"}
+            ? "Logging in..."
+            : "Login"}
         </button>
 
-        <p className="text-center">
-          Already have an account?{" "}
+        <p>
+          Don't have account?{" "}
           <Link
-            to="/login"
+            to="/register"
             className="text-blue-600"
           >
-            Login
+            Register
           </Link>
         </p>
       </form>
@@ -178,4 +150,4 @@ function RegisterPage() {
   );
 }
 
-export default RegisterPage;
+export default LoginPage;

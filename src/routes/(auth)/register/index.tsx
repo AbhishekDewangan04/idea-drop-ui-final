@@ -1,83 +1,171 @@
 import { registerUser } from "@/api/auth";
 import { useAuth } from "@/context/AuthContext";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import React, { useState } from "react";
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+} from "@tanstack/react-router";
 
-export const Route = createFileRoute("/(auth)/register/")({
-  component: RegisterPage,
-});
+import { useState } from "react";
+
+export const Route =
+  createFileRoute("/(auth)/register/")({
+    component: RegisterPage,
+  });
+
+type RegisterInput = {
+  name: string;
+  email: string;
+  password: string;
+};
 
 function RegisterPage() {
-  //states
-  const { setUser, setAccessToken } = useAuth();
-  const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const {
+    setAccessToken,
+    setUser,
+  } = useAuth();
 
-  const { mutateAsync, isPending } = useMutation({
-    mutationFn: registerUser,
-    onSuccess: (data) => {
-      setUser(data.user);
-      setAccessToken(data.accessToken);
-      navigate({ to: "/ideas" });
+  const navigate =
+    useNavigate();
+
+  const [name, setName] =
+    useState("");
+
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
+
+  const {
+    mutateAsync,
+    isPending,
+  } = useMutation({
+    mutationFn: (
+      data: RegisterInput
+    ) => {
+      return registerUser(
+        data.name,
+        data.email,
+        data.password
+      );
     },
-    onError: (error) => {
-      setError(error.message);
+
+    onSuccess: (
+      data
+    ) => {
+      setAccessToken(
+        data.accessToken
+      );
+
+      setUser(
+        data.user
+      );
+
+      navigate({
+        to: "/ideas",
+      });
+    },
+
+    onError: (
+      error: Error
+    ) => {
+      setError(
+        error.message
+      );
     },
   });
-  //
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await mutateAsync({name,email, password});
-      
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to Register with unknown Error'
-      console.log(message)
-    }
-  };
+
+  const handleSubmit =
+    async (
+      e: React.FormEvent
+    ) => {
+      e.preventDefault();
+
+      await mutateAsync({
+        name,
+        email,
+        password,
+      });
+    };
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-4">Register</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Register
+      </h1>
+
       {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-2 w-full rounded text-center mb-4">
+        <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
           {error}
         </div>
       )}
-      <form className="space-y-2.5" onSubmit={handleSubmit}>
+
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-2"
+      >
         <input
+          type="text"
           placeholder="Name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border border-gray-400 px-2 py-1 rounded focus:outline-0 focus:ring ring-gray-500"
-          type="text"
+          onChange={(e) =>
+            setName(
+              e.target.value
+            )
+          }
+          className="w-full border p-2 rounded"
         />
+
         <input
+          type="email"
           placeholder="Email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-gray-400 px-2 py-1 rounded focus:outline-0 focus:ring ring-gray-500"
-          type="text"
+          onChange={(e) =>
+            setEmail(
+              e.target.value
+            )
+          }
+          className="w-full border p-2 rounded"
         />
+
         <input
+          type="password"
           placeholder="Password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-gray-400 px-2 py-1 rounded focus:outline-0 focus:ring ring-gray-500"
-          type="text"
+          onChange={(e) =>
+            setPassword(
+              e.target.value
+            )
+          }
+          className="w-full border p-2 rounded"
         />
+
         <button
           disabled={isPending}
-          className="bg-blue-600 text-white font-medium px-4 py-2 rounded-md w-full hover:bg-blue-700 transition cursor-pointer mt-1 disabled:opacity-50"
-          type="submit"
+          className="bg-blue-600 text-white p-2 rounded w-full"
         >
-          {isPending ? "Registering..." : "Register"}
+          {isPending
+            ? "Registering..."
+            : "Register"}
         </button>
-        <p className="text-sm text-center text-gray-600">Already have account? {"  "} <Link className="text-blue-500 hover:text-blue-700 hover:underline transition" to="/login">Login</Link></p>
+
+        <p>
+          Already have account?{" "}
+          <Link
+            to="/login"
+            className="text-blue-600"
+          >
+            Login
+          </Link>
+        </p>
       </form>
     </div>
   );
 }
+
+export default RegisterPage;
