@@ -2,20 +2,18 @@ import axios from "axios";
 import { getStoredAccessToken, setStoredAccessToken } from "./authToken";
 import { refreshAccessToken } from "@/api/auth";
 
+const API_URL =
+  import.meta.env.VITE_PRODUCTION_API_URL ||
+  "http://localhost:8000";
+
 const api = axios.create({
-  baseURL:
-  import.meta.env.VITE_PRODUCTION_API_URL
-    ? `${import.meta.env.VITE_PRODUCTION_API_URL}/api`
-    : "/api",
-    
+  baseURL: `${API_URL}/api`,
   headers: {
     "Content-Type": "application/json",
   },
-
   withCredentials: true,
 });
 
-// Attach Token
 api.interceptors.request.use((config) => {
   const token = getStoredAccessToken();
 
@@ -26,10 +24,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Refresh Token
 api.interceptors.response.use(
   (res) => res,
-
   async (error) => {
     const requestConfig = error.config;
 
@@ -38,20 +34,17 @@ api.interceptors.response.use(
       !requestConfig.url.includes("/auth/refresh")
     ) {
       try {
-        const { accessToken: newToken } =
+        const { accessToken } =
           await refreshAccessToken();
 
-        setStoredAccessToken(newToken);
+        setStoredAccessToken(accessToken);
 
         requestConfig.headers.Authorization =
-          `Bearer ${newToken}`;
+          `Bearer ${accessToken}`;
 
         return api(requestConfig);
       } catch (err) {
-        console.error(
-          "Refreshing Access Token failed",
-          err
-        );
+        console.error(err);
       }
     }
 
