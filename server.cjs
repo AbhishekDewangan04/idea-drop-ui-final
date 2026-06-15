@@ -345,11 +345,14 @@ if (
     }
   );
 
+const PORT =
+  process.env.PORT || 3000;
+
 server.listen(
-  8000,
+  PORT,
   () => {
     console.log(
-      "Backend running at http://localhost:8000"
+      `Running on ${PORT}`
     );
   }
 );
