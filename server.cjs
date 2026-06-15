@@ -9,6 +9,9 @@ const DB_PATH = path.join(
   "db.json"
 );
 
+const FRONTEND =
+  "https://idea-drop-ui-final-2woo6m2wd-abhisheks-projects-9a293ac2.vercel.app";
+
 function readDB() {
   try {
     return JSON.parse(
@@ -17,7 +20,12 @@ function readDB() {
         "utf8"
       )
     );
-  } catch {
+  } catch (err) {
+    console.error(
+      "DB READ ERROR:",
+      err
+    );
+
     return {
       ideas: [],
       users: [],
@@ -46,6 +54,18 @@ function sendJSON(
     {
       "Content-Type":
         "application/json",
+
+      "Access-Control-Allow-Origin":
+        FRONTEND,
+
+      "Access-Control-Allow-Credentials":
+        "true",
+
+      "Access-Control-Allow-Headers":
+        "Content-Type, Authorization",
+
+      "Access-Control-Allow-Methods":
+        "GET,POST,PUT,DELETE,OPTIONS",
     }
   );
 
@@ -61,11 +81,8 @@ function parseBody(req) {
 
       req.on(
         "data",
-        (
-          chunk
-        ) => {
-          body +=
-            chunk;
+        (chunk) => {
+          body += chunk;
         }
       );
 
@@ -75,14 +92,11 @@ function parseBody(req) {
           try {
             resolve(
               JSON.parse(
-                body ||
-                  "{}"
+                body || "{}"
               )
             );
           } catch {
-            resolve(
-              {}
-            );
+            resolve({});
           }
         }
       );
@@ -96,257 +110,233 @@ const server =
       req,
       res
     ) => {
-      // CORS
-      res.setHeader(
-        "Access-Control-Allow-Origin",
-        "http://localhost:3000"
-      );
-
-      res.setHeader(
-        "Access-Control-Allow-Methods",
-        "GET,POST,PUT,DELETE,OPTIONS"
-      );
-
-      res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type,Authorization"
-      );
-
-      res.setHeader(
-        "Access-Control-Allow-Credentials",
-        "true"
-      );
-
-      if (
-        req.method ===
-        "OPTIONS"
-      ) {
-        res.writeHead(
-          204
-        );
-
-        return res.end();
-      }
-
-      let url =
-        req.url;
-
-      const method =
-        req.method;
-
-      if (
-        url.startsWith(
-          "/api"
-        )
-      ) {
-        url =
-          url.replace(
-            "/api",
-            ""
+      try {
+        if (
+          req.method ===
+          "OPTIONS"
+        ) {
+          return sendJSON(
+            res,
+            200,
+            {}
           );
-      }
+        }
 
-      console.log(
-        `${method} ${url}`
-      );
+        let url =
+          req.url;
 
-      const db =
-        readDB();
+        const method =
+          req.method;
 
-      db.ideas =
-        Array.isArray(
-          db.ideas
-        )
-          ? db.ideas
-          : [];
-
-      db.users =
-        Array.isArray(
-          db.users
-        )
-          ? db.users
-          : [];
-
-      // GET IDEAS
-      if (
-        method ===
-          "GET" &&
-        url.startsWith(
-          "/ideas"
-        )
-      ) {
-        const limit =
-          Number(
-            new URL(
-              req.url,
-              "http://localhost:8000"
-            ).searchParams.get(
-              "_limit"
-            )
-          ) ||
-          db.ideas
-            .length;
-
-        return sendJSON(
-          res,
-          200,
-          db.ideas.slice(
-            0,
-            limit
+        if (
+          url.startsWith(
+            "/api"
           )
-        );
-      }
-
-      // CREATE IDEA
-      if (
-        method ===
-          "POST" &&
-        url ===
-          "/ideas"
-      ) {
-        const body =
-          await parseBody(
-            req
-          );
-
-        const newIdea =
-          {
-            id:
-              Date.now().toString(),
-            ...body,
-            createdAt:
-              new Date().toISOString(),
-          };
-
-        db.ideas.push(
-          newIdea
-        );
-
-        writeDB(
-          db
-        );
+        ) {
+          url =
+            url.replace(
+              "/api",
+              ""
+            );
+        }
 
         console.log(
-          "IDEA CREATED"
+          method,
+          url
         );
 
-        return sendJSON(
-          res,
-          201,
-          newIdea
-        );
-      }
+        const db =
+          readDB();
+
+        db.ideas =
+          Array.isArray(
+            db.ideas
+          )
+            ? db.ideas
+            : [];
+
+        db.users =
+          Array.isArray(
+            db.users
+          )
+            ? db.users
+            : [];
+
+        // GET IDEAS
+        if (
+          method ===
+            "GET" &&
+          url.startsWith(
+            "/ideas"
+          )
+        ) {
+          return sendJSON(
+            res,
+            200,
+            db.ideas
+          );
+        }
+
+        // CREATE IDEA
+        if (
+          method ===
+            "POST" &&
+          url ===
+            "/ideas"
+        ) {
+          const body =
+            await parseBody(
+              req
+            );
+
+          const idea =
+            {
+              id:
+                Date.now().toString(),
+
+              ...body,
+
+              createdAt:
+                new Date().toISOString(),
+            };
+
+          db.ideas.push(
+            idea
+          );
+
+          writeDB(
+            db
+          );
+
+          return sendJSON(
+            res,
+            201,
+            idea
+          );
+        }
+
         // LOGIN
-if (
-  url === "/auth/login" &&
-  method === "POST"
-) {
-  const body =
-    await parseBody(req);
+        if (
+          method ===
+            "POST" &&
+          url ===
+            "/auth/login"
+        ) {
+          const body =
+            await parseBody(
+              req
+            );
 
-  console.log("LOGIN BODY:", body);
+          const email =
+            String(
+              body.email ||
+                ""
+            )
+              .trim()
+              .toLowerCase();
 
-  const loginData =
-    body.email || body;
+          const password =
+            String(
+              body.password ||
+                ""
+            ).trim();
 
-  const email =
-    String(
-      loginData.email || ""
-    )
-      .trim()
-      .toLowerCase();
+          const user =
+            db.users.find(
+              (
+                u
+              ) =>
+                u.email
+                  .toLowerCase() ===
+                  email &&
+                u.password ===
+                  password
+            );
 
-  const password =
-    String(
-      loginData.password || ""
-    ).trim();
+          if (
+            !user
+          ) {
+            return sendJSON(
+              res,
+              401,
+              {
+                message:
+                  "Invalid credentials",
+              }
+            );
+          }
 
-  const user =
-    (db.users || []).find(
-      (u) =>
-        u.email
-          .toLowerCase()
-          .trim() === email &&
-        u.password.trim() ===
-          password
-    );
+          return sendJSON(
+            res,
+            200,
+            {
+              accessToken:
+                "fake-token",
 
-  if (!user) {
-    return sendJSON(
-      res,
-      401,
-      {
-        message:
-          "Invalid credentials",
-      }
-    );
-  }
+              user: {
+                id:
+                  user.id,
 
-  return sendJSON(
-    res,
-    200,
-    {
-      accessToken:
-        "fake-token",
+                name:
+                  user.name,
 
-      user: {
-        id:
-          user.id,
-        name:
-          user.name,
-        email:
-          user.email,
-      },
-    }
-  );
-}
-      // REFRESH
-      // REFRESH
-if (
-  url === "/auth/refresh" &&
-  method === "POST"
-) {
-  return sendJSON(
-    res,
-    200,
-    {
-      accessToken: "fake-token",
+                email:
+                  user.email,
+              },
+            }
+          );
+        }
 
-      user: {
-        id: "1",
-        name: "Abhishek",
-        email:
-          "abhishekdewangan8910@gmail.com",
-      },
-    }
-  );
-} {
+        // REFRESH
+        if (
+          method ===
+            "POST" &&
+          url ===
+            "/auth/refresh"
+        ) {
+          return sendJSON(
+            res,
+            200,
+            {
+              accessToken:
+                "fake-token",
+
+              user:
+                null,
+            }
+          );
+        }
+
         return sendJSON(
           res,
-          200,
+          404,
           {
-            accessToken:
-              "fake-token",
+            message:
+              "Route not found",
+          }
+        );
+      } catch (
+        err
+      ) {
+        console.error(
+          err
+        );
 
-            user:
-              null,
+        return sendJSON(
+          res,
+          500,
+          {
+            message:
+              "Server error",
           }
         );
       }
-
-      return sendJSON(
-        res,
-        404,
-        {
-          message:
-            "Not Found",
-        }
-      );
     }
   );
 
 const PORT =
-  process.env.PORT || 3000;
+  process.env.PORT ||
+  8080;
 
 server.listen(
   PORT,
