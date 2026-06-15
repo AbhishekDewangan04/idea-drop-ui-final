@@ -10,7 +10,7 @@ const DB_PATH = path.join(
 );
 
 const FRONTEND =
-  "https://idea-drop-ui-final-2woo6m2wd-abhisheks-projects-9a293ac2.vercel.app";
+"https://idea-drop-ui-final.vercel.app";
 
 function readDB() {
   try {
@@ -59,7 +59,7 @@ function sendJSON(
         FRONTEND,
 
       "Access-Control-Allow-Credentials":
-        "true",
+        "false",
 
       "Access-Control-Allow-Headers":
         "Content-Type, Authorization",
@@ -337,6 +337,8 @@ const server =
 const PORT =
   process.env.PORT ||
   8080;
+
+
 
 server.listen(
   PORT,
